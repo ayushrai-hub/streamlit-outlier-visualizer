@@ -22,7 +22,8 @@ def analyze_earnings_report(df):
         df.dropna(subset=['workDate'], inplace=True)
         if len(df) < initial_rows:
             st.warning(f"Removed {initial_rows - len(df)} rows due to unparseable 'workDate' entries.")
-        df['payout'] = df['payout'].replace({'\\$': '', '-': '0'}, regex=True).astype(float)
+        # Clean payout column - remove currency symbols and convert to float
+        df['payout'] = df['payout'].astype(str).str.replace('[$,]', '', regex=True).replace('-', '0').astype(float)
         df['duration_seconds'] = df['duration'].apply(parse_duration)
 
         # Calculations
@@ -101,12 +102,18 @@ def analyze_earnings_report(df):
 # --- Streamlit UI ---
 st.title("Outlier Earnings Report Analysis")
 st.write("""
-This application analyzes your 'Outlier_Earnings_Report.csv' file to provide insights into project earnings,
+This application analyzes your Outlier earnings data to provide insights into project earnings,
 time spent, and categorized income (rewards, other platform earnings, and assessment money).
 
-**To use this application:**
-1.  Make sure your 'Outlier_Earnings_Report.csv' file is in the same directory as this script.
-2.  Run the application using `streamlit run src/app.py` in your terminal.
+**Features:**
+- Visualize earnings over time for each project
+- View total earnings and time spent per project
+- Analyze mission rewards, platform earnings, and assessment work
+- Interactive data upload capability
+
+You can either:
+1. Upload your CSV file using the upload button below, or
+2. Place your 'Outlier_Earnings_Report.csv' file in the 'data' directory
 """)
 uploaded_file = st.file_uploader("Upload your Outlier_Earnings_Report.csv file (optional, if not in the same directory)", type="csv")
 if uploaded_file is not None:
@@ -115,11 +122,14 @@ if uploaded_file is not None:
     analyze_earnings_report(df.copy())
 else:
     try:
-        df = pd.read_csv('earnings_analyzer/data/Outlier_Earnings_Report.csv')
+        # Try to load from the data directory relative to this script
+        current_dir = os.path.dirname(os.path.abspath(__file__))
+        csv_path = os.path.join(os.path.dirname(current_dir), 'data', 'Outlier_Earnings_Report.csv')
+        df = pd.read_csv(csv_path)
         st.success("Local 'Outlier_Earnings_Report.csv' loaded successfully!")
         analyze_earnings_report(df.copy())
     except FileNotFoundError:
-        st.warning("No file uploaded and 'Outlier_Earnings_Report.csv' not found. Please upload or place the CSV in the correct directory.")
+        st.warning("No file uploaded and 'Outlier_Earnings_Report.csv' not found in the data directory. Please upload a CSV file.")
     except pd.errors.EmptyDataError:
         st.error("Error: The CSV file is empty. Please provide a file with data.")
     except KeyError as e:
