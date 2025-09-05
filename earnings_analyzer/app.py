@@ -5,9 +5,13 @@ Streamlit app for Outlier Earnings Report Analysis.
 import sys
 import os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-import pandas as pd
+
+# Set matplotlib backend before importing
 import matplotlib
-matplotlib.use('Agg')  # Use Agg backend
+matplotlib.use('agg')
+
+# Import other dependencies
+import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 import streamlit as st
